@@ -1,0 +1,19 @@
+{
+  "name": "fantasy-grid",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace=@fantasy-grid/server",
+    "dev:client": "npm run dev --workspace=@fantasy-grid/client",
+    "dev": "concurrently -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build:client": "npm run build --workspace=@fantasy-grid/client"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4",
+    "typescript": "^7.0.2"
+  }
+}

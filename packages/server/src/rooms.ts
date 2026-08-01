@@ -1,6 +1,7 @@
 import type { CharacterClass, Direction, Player, RoomSnapshot } from "@fantasy-grid/shared";
 
 const MOVE_COOLDOWN_MS = 150;
+const GRACE_PERIOD_MS = 60_000;
 
 const DELTA: Record<Direction, { dx: number; dy: number }> = {
   up: { dx: 0, dy: -1 },
@@ -19,6 +20,7 @@ export class Room {
   readonly gridSize: { width: number; height: number };
   readonly maxPlayers: number;
   private players = new Map<string, InternalPlayer>();
+  private graceTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(id: string, name: string, gridSize = { width: 20, height: 20 }, maxPlayers = 50) {
     this.id = id;
@@ -55,6 +57,25 @@ export class Room {
 
   getPlayer(id: string): InternalPlayer | undefined {
     return this.players.get(id);
+  }
+
+  /** Keeps the player's slot reserved for `ms`, then removes them and calls `onExpire`. */
+  holdForGrace(id: string, onExpire: () => void, ms = GRACE_PERIOD_MS): void {
+    const timer = setTimeout(() => {
+      this.graceTimers.delete(id);
+      this.removePlayer(id);
+      onExpire();
+    }, ms);
+    this.graceTimers.set(id, timer);
+  }
+
+  /** Reclaims a slot still held in its grace window, or returns null if there isn't one. */
+  resume(id: string): InternalPlayer | null {
+    const timer = this.graceTimers.get(id);
+    if (!timer) return null;
+    clearTimeout(timer);
+    this.graceTimers.delete(id);
+    return this.players.get(id) ?? null;
   }
 
   /** Returns the updated player on success, or null if the move was rejected. */

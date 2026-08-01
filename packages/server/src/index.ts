@@ -1,10 +1,68 @@
 import { WebSocketServer, type WebSocket } from "ws";
 import { randomUUID } from "node:crypto";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { dirname, extname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { ClientMessage, ServerMessage } from "@fantasy-grid/shared";
 import { rooms } from "./rooms.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
-const wss = new WebSocketServer({ port: PORT });
+const CLIENT_DIST = resolve(dirname(fileURLToPath(import.meta.url)), "../../client/dist");
+
+const MIME_TYPES: Record<string, string> = {
+  ".html": "text/html",
+  ".js": "text/javascript",
+  ".css": "text/css",
+  ".json": "application/json",
+  ".map": "application/json",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2"
+}
+
+async function serveStatic(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!existsSync(CLIENT_DIST)) {
+    res.writeHead(503, { "Content-Type": "text/plain" });
+    res.end("Client build not found. Run `npm run build:client` first.");
+    return;
+  }
+
+  const requestPath = (req.url ?? "/").split("?")[0];
+  const relativePath = requestPath === "/" ? "index.html" : requestPath.slice(1);
+  const filePath = join(CLIENT_DIST, relativePath);
+
+  if (!filePath.startsWith(CLIENT_DIST)) {
+    res.writeHead(403);
+    res.end("Forbidden");
+    return;
+  }
+
+  try {
+    const body = await readFile(filePath);
+    res.writeHead(200, { "Content-Type": MIME_TYPES[extname(filePath)] ?? "application/octet-stream" });
+    res.end(body);
+  } catch {
+    res.writeHead(404);
+    res.end("Not found");
+  }
+}
+
+const server = createServer((req, res) => {
+  void serveStatic(req, res);
+});
+const wss = new WebSocketServer({ noServer: true });
+
+server.on("upgrade", (req, socket, head) => {
+  wss.handleUpgrade(req, socket, head, (ws) => {
+    wss.emit("connection", ws, req);
+  });
+});
 
 interface ConnectionState {
   playerId: string;
@@ -41,6 +99,18 @@ wss.on("connection", (ws) => {
           send(ws, { type: "error", code: "ROOM_FULL", message: "Unknown room" });
           return;
         }
+
+        if (msg.resumePlayerId) {
+          const player = room.resume(msg.resumePlayerId);
+          if (!player) {
+            send(ws, { type: "error", code: "RESUME_FAILED", message: "Session expired or already active" });
+            return;
+          }
+          connections.set(ws, { playerId: player.id, roomId: room.id });
+          send(ws, { type: "join_ack", playerId: player.id, room: room.snapshot() });
+          return;
+        }
+
         if (room.isFull()) {
           send(ws, { type: "error", code: "ROOM_FULL", message: "Server is full" });
           return;
@@ -78,7 +148,7 @@ wss.on("connection", (ws) => {
       }
 
       case "leave_room": {
-        disconnect(ws);
+        leaveRoom(ws);
         break;
       }
 
@@ -98,14 +168,10 @@ wss.on("connection", (ws) => {
     }
   });
 
-  ws.on("close", () => disconnect(ws));
+  ws.on("close", () => handleClose(ws));
 });
 
-function disconnect(ws: WebSocket) {
-  // TODO(spec 02, Reconnect Handling): this removes the player immediately.
-  // The spec calls for a 60s grace period before freeing the slot, which also
-  // needs a `join_room` protocol extension to resume an existing playerId.
-  // Deferred until reconnect flow is designed.
+function leaveRoom(ws: WebSocket): void {
   const state = connections.get(ws);
   if (!state) return;
   const room = rooms.get(state.roomId);
@@ -114,4 +180,17 @@ function disconnect(ws: WebSocket) {
   if (room) broadcast(room.id, { type: "player_left", playerId: state.playerId });
 }
 
-console.log(`fantasy-grid server listening on ws://localhost:${PORT}`);
+function handleClose(ws: WebSocket): void {
+  const state = connections.get(ws);
+  connections.delete(ws);
+  if (!state) return;
+  const room = rooms.get(state.roomId);
+  if (!room) return;
+  room.holdForGrace(state.playerId, () => {
+    broadcast(room.id, { type: "player_left", playerId: state.playerId });
+  });
+}
+
+server.listen(PORT, () => {
+  console.log(`fantasy-grid server listening on http://localhost:${PORT}`);
+});

@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 
 import { registerCharacterAnimations } from "../anims/registerCharacterAnimations";
+import { loadPersistedSession, sessionStore } from "../state/sessionStore";
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -33,6 +34,17 @@ export class PreloadScene extends Phaser.Scene {
 
   create(): void {
     registerCharacterAnimations(this);
+
+    const persisted = loadPersistedSession();
+    if (persisted) {
+      sessionStore.playerId = persisted.playerId;
+      sessionStore.roomId = persisted.roomId;
+      sessionStore.displayName = persisted.displayName;
+      sessionStore.characterClass = persisted.characterClass;
+      this.scene.start("ServerListScene");
+      return;
+    }
+
     this.scene.start("CharacterSelectScene");
   }
 }

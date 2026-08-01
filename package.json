@@ -10,7 +10,10 @@
     "dev:client": "npm run dev --workspace=@fantasy-grid/client",
     "dev": "concurrently -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "build:client": "npm run build --workspace=@fantasy-grid/client"
+    "build:client": "npm run build --workspace=@fantasy-grid/client",
+    "build:server": "npm run build --workspace=@fantasy-grid/server",
+    "build": "npm run build:client && npm run build:server",
+    "start": "npm run start --workspace=@fantasy-grid/server"
   },
   "devDependencies": {
     "concurrently": "^10.0.4",

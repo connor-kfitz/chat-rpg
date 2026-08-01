@@ -1,4 +1,4 @@
-# Fantasy Grid MVP — Overview & Scope
+# Chat Rpg MVP — Overview & Scope
 
 ## Vision
 A browser-based multiplayer game inspired by Final Fantasy 1's overworld aesthetic. Players choose a class, join a shared world, and move around a tile-based forest map alongside other connected players in real time. This is the foundation for a later social/chat layer.

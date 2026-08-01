@@ -2,7 +2,7 @@ import Phaser from "phaser";
 
 import type { ErrorMessage, JoinAckMessage, RoomListEntry, RoomListMessage } from "@fantasy-grid/shared";
 import { socketClient } from "../net/SocketClient";
-import { sessionStore } from "../state/sessionStore";
+import { clearPersistedSession, persistSession, sessionStore } from "../state/sessionStore";
 import { WS_URL } from "../config/constants";
 
 const POLL_INTERVAL_MS = 4000;
@@ -20,6 +20,7 @@ export class ServerListScene extends Phaser.Scene {
   private rows: Row[] = [];
   private pollTimer?: Phaser.Time.TimerEvent;
   private joining = false;
+  private resuming = false;
 
   constructor() {
     super("ServerListScene");
@@ -27,6 +28,7 @@ export class ServerListScene extends Phaser.Scene {
 
   create(): void {
     this.joining = false;
+    this.resuming = false;
 
     this.add
       .text(this.scale.width / 2, 40, "Server List", { fontFamily: "monospace", fontSize: "20px" })
@@ -64,6 +66,18 @@ export class ServerListScene extends Phaser.Scene {
   private onConnected(): void {
     this.statusText.setText("Connected");
     socketClient.send({ type: "list_rooms" });
+
+    if (sessionStore.playerId && sessionStore.roomId && sessionStore.characterClass) {
+      this.resuming = true;
+      this.statusText.setText("Reconnecting...");
+      socketClient.send({
+        type: "join_room",
+        roomId: sessionStore.roomId,
+        displayName: sessionStore.displayName,
+        characterClass: sessionStore.characterClass,
+        resumePlayerId: sessionStore.playerId
+      });
+    }
   }
 
   private onDisconnected(): void {
@@ -125,11 +139,21 @@ export class ServerListScene extends Phaser.Scene {
 
   private onJoinAck(msg: JoinAckMessage): void {
     sessionStore.playerId = msg.playerId;
+    sessionStore.roomId = msg.room.id;
     sessionStore.room = msg.room;
+    persistSession();
     this.scene.start("GameScene");
   }
 
   private onError(msg: ErrorMessage): void {
+    if (this.resuming) {
+      this.resuming = false;
+      sessionStore.playerId = null;
+      sessionStore.roomId = null;
+      clearPersistedSession();
+      this.statusText.setText("Connected");
+    }
+
     this.joining = false;
     for (const row of this.rows) row.joinButton.setInteractive({ useHandCursor: true }).setAlpha(1);
     this.errorText.setText(msg.message);

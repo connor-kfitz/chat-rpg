@@ -7,6 +7,7 @@ export interface JoinRoomMessage {
   roomId: string;
   displayName: string;
   characterClass: CharacterClass;
+  resumePlayerId?: string;
 }
 
 export interface MoveMessage {
@@ -49,7 +50,7 @@ export interface PlayerLeftMessage {
   playerId: string;
 }
 
-export type ErrorCode = "ROOM_FULL" | "NAME_TAKEN" | "INVALID_MOVE";
+export type ErrorCode = "ROOM_FULL" | "NAME_TAKEN" | "INVALID_MOVE" | "RESUME_FAILED";
 
 export interface ErrorMessage {
   type: "error";

@@ -6,8 +6,8 @@ const DELTA: Record<Direction, { dx: number; dy: number }> = {
   up: { dx: 0, dy: -1 },
   down: { dx: 0, dy: 1 },
   left: { dx: -1, dy: 0 },
-  right: { dx: 1, dy: 0 },
-};
+  right: { dx: 1, dy: 0 }
+}
 
 interface InternalPlayer extends Player {
   lastMoveAt: number;
@@ -43,8 +43,8 @@ export class Room {
       position: this.randomSpawn(),
       facing: "down",
       connectedAt: Date.now(),
-      lastMoveAt: 0,
-    };
+      lastMoveAt: 0
+    }
     this.players.set(id, player);
     return player;
   }
@@ -78,7 +78,7 @@ export class Room {
       return null;
     }
 
-    player.position = { x: nextX, y: nextY };
+    player.position = { x: nextX, y: nextY }
     player.lastMoveAt = now;
     return player;
   }
@@ -90,15 +90,15 @@ export class Room {
       gridSize: this.gridSize,
       tileType: "forest",
       maxPlayers: this.maxPlayers,
-      players: [...this.players.values()].map(({ lastMoveAt: _drop, ...p }) => p),
-    };
+      players: [...this.players.values()].map(({ lastMoveAt: _drop, ...p }) => p)
+    }
   }
 
   private randomSpawn() {
     return {
       x: Math.floor(this.gridSize.width / 2),
-      y: Math.floor(this.gridSize.height / 2),
-    };
+      y: Math.floor(this.gridSize.height / 2)
+    }
   }
 }
 

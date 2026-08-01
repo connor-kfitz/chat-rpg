@@ -18,7 +18,11 @@ export interface LeaveRoomMessage {
   type: "leave_room";
 }
 
-export type ClientMessage = JoinRoomMessage | MoveMessage | LeaveRoomMessage;
+export interface ListRoomsMessage {
+  type: "list_rooms";
+}
+
+export type ClientMessage = JoinRoomMessage | MoveMessage | LeaveRoomMessage | ListRoomsMessage;
 
 // ---- Server -> Client ----
 
@@ -53,9 +57,22 @@ export interface ErrorMessage {
   message: string;
 }
 
+export interface RoomListEntry {
+  id: string;
+  name: string;
+  playerCount: number;
+  maxPlayers: number;
+}
+
+export interface RoomListMessage {
+  type: "room_list";
+  rooms: RoomListEntry[];
+}
+
 export type ServerMessage =
   | JoinAckMessage
   | PlayerJoinedMessage
   | PlayerMovedMessage
   | PlayerLeftMessage
-  | ErrorMessage;
+  | ErrorMessage
+  | RoomListMessage;

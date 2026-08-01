@@ -72,13 +72,27 @@ wss.on("connection", (ws) => {
           type: "player_moved",
           playerId: updated.id,
           position: updated.position,
-          facing: updated.facing,
+          facing: updated.facing
         });
         break;
       }
 
       case "leave_room": {
         disconnect(ws);
+        break;
+      }
+
+      case "list_rooms": {
+        const roomList = [...rooms.values()].map((room) => {
+          const snap = room.snapshot();
+          return {
+            id: snap.id,
+            name: snap.name,
+            playerCount: snap.players.length,
+            maxPlayers: snap.maxPlayers
+          }
+        });
+        send(ws, { type: "room_list", rooms: roomList });
         break;
       }
     }

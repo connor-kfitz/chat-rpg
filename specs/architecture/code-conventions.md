@@ -1,4 +1,4 @@
-# Code Syntax Conventions
+# Code Conventions
 
 Applies to all TypeScript in this repo (`packages/*/src`).
 

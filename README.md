@@ -1,6 +1,6 @@
 # fantasy-grid
 
-Monorepo for the FF1-style multiplayer grid game. See `specs/` for the full spec set.
+Monorepo for the FF1-style multiplayer grid game. See [`specs/product/overview.md`](specs/product/overview.md) for the vision and an index of the full spec set.
 
 ## Structure
 - `packages/shared` — protocol types shared by client and server (no build step; consumed as TS source)

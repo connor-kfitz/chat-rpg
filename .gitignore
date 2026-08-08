@@ -3,3 +3,8 @@ dist/
 .DS_Store
 *.log
 .env
+
+tile_maps/capybara-forest/**
+!tile_maps/capybara-forest/**/
+!tile_maps/capybara-forest/**/.gitkeep
+packages/client/public/assets/tilemaps/

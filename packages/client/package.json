@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "predev": "node ../../scripts/sync-tilemap.mjs",
     "dev": "vite",
+    "prebuild": "node ../../scripts/sync-tilemap.mjs",
     "build": "vite build",
     "typecheck": "tsc --noEmit"
   },

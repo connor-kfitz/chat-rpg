@@ -3,7 +3,8 @@ import Phaser from "phaser";
 import type { ErrorMessage, JoinAckMessage, RoomListEntry, RoomListMessage } from "@fantasy-grid/shared";
 import { socketClient } from "../net/SocketClient";
 import { clearPersistedSession, persistSession, sessionStore } from "../state/sessionStore";
-import { WS_URL } from "../config/constants";
+import { WS_URL, DESIGN_WIDTH, DESIGN_HEIGHT } from "../config/constants";
+import { createCenteredLayer } from "../ui/centeredLayer";
 
 const POLL_INTERVAL_MS = 4000;
 const ROW_START_Y = 140;
@@ -15,6 +16,7 @@ interface Row {
 }
 
 export class ServerListScene extends Phaser.Scene {
+  private layer!: Phaser.GameObjects.Container;
   private statusText!: Phaser.GameObjects.Text;
   private errorText!: Phaser.GameObjects.Text;
   private rows: Row[] = [];
@@ -30,21 +32,26 @@ export class ServerListScene extends Phaser.Scene {
     this.joining = false;
     this.resuming = false;
 
-    this.add
-      .text(this.scale.width / 2, 40, "Server List", { fontFamily: "monospace", fontSize: "20px" })
-      .setOrigin(0.5, 0.5);
+    this.layer = createCenteredLayer(this);
+    const centerX = DESIGN_WIDTH / 2;
+
+    this.layer.add(
+      this.add.text(centerX, 40, "Server List", { fontFamily: "monospace", fontSize: "20px" }).setOrigin(0.5, 0.5)
+    );
 
     this.statusText = this.add
-      .text(this.scale.width / 2, 90, "Connecting...", { fontFamily: "monospace", fontSize: "14px" })
+      .text(centerX, 90, "Connecting...", { fontFamily: "monospace", fontSize: "14px" })
       .setOrigin(0.5, 0.5);
+    this.layer.add(this.statusText);
 
     this.errorText = this.add
-      .text(this.scale.width / 2, this.scale.height - 40, "", {
+      .text(centerX, DESIGN_HEIGHT - 40, "", {
         fontFamily: "monospace",
         fontSize: "13px",
         color: "#ff6666"
       })
       .setOrigin(0.5, 0.5);
+    this.layer.add(this.errorText);
 
     socketClient.on("connected", this.onConnected, this);
     socketClient.on("room_list", this.onRoomList, this);
@@ -94,7 +101,8 @@ export class ServerListScene extends Phaser.Scene {
 
     entries.forEach((entry, index) => {
       const y = ROW_START_Y + index * ROW_HEIGHT;
-      const container = this.add.container(this.scale.width / 2, y);
+      const container = this.add.container(DESIGN_WIDTH / 2, y);
+      this.layer.add(container);
 
       const label = this.add
         .text(-180, 0, `${entry.name} — ${entry.playerCount}/${entry.maxPlayers}`, {

@@ -1,6 +1,8 @@
 import type { Direction } from "@fantasy-grid/shared";
 
 export const TILE_SIZE = 32;
+export const DESIGN_WIDTH = 640;
+export const DESIGN_HEIGHT = 480;
 
 export const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:8080";
 

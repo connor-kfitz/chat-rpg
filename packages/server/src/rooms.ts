@@ -1,4 +1,5 @@
 import type { CharacterClass, Direction, Player, RoomSnapshot } from "@fantasy-grid/shared";
+import { loadTerrain } from "./terrain.js";
 
 const MOVE_COOLDOWN_MS = 150;
 const GRACE_PERIOD_MS = 60_000;
@@ -19,14 +20,26 @@ export class Room {
   readonly name: string;
   readonly gridSize: { width: number; height: number };
   readonly maxPlayers: number;
+  private walkable: boolean[][];
   private players = new Map<string, InternalPlayer>();
   private graceTimers = new Map<string, NodeJS.Timeout>();
 
-  constructor(id: string, name: string, gridSize = { width: 20, height: 20 }, maxPlayers = 50) {
+  constructor(
+    id: string,
+    name: string,
+    gridSize: { width: number; height: number },
+    walkable: boolean[][],
+    maxPlayers = 50
+  ) {
     this.id = id;
     this.name = name;
     this.gridSize = gridSize;
+    this.walkable = walkable;
     this.maxPlayers = maxPlayers;
+  }
+
+  private isWalkable(x: number, y: number): boolean {
+    return this.walkable[y]?.[x] ?? false;
   }
 
   isFull(): boolean {
@@ -94,7 +107,7 @@ export class Room {
     const inBounds =
       nextX >= 0 && nextX < this.gridSize.width && nextY >= 0 && nextY < this.gridSize.height;
 
-    if (!inBounds) {
+    if (!inBounds || !this.isWalkable(nextX, nextY)) {
       player.lastMoveAt = now;
       return null;
     }
@@ -109,18 +122,37 @@ export class Room {
       id: this.id,
       name: this.name,
       gridSize: this.gridSize,
-      tileType: "forest",
       maxPlayers: this.maxPlayers,
       players: [...this.players.values()].map(({ lastMoveAt: _drop, ...p }) => p)
     }
   }
 
+  /** Grid center if walkable, otherwise the nearest walkable tile found by expanding outward. */
   private randomSpawn() {
-    return {
-      x: Math.floor(this.gridSize.width / 2),
-      y: Math.floor(this.gridSize.height / 2)
+    const centerX = Math.floor(this.gridSize.width / 2);
+    const centerY = Math.floor(this.gridSize.height / 2);
+    if (this.isWalkable(centerX, centerY)) return { x: centerX, y: centerY }
+
+    const maxRadius = Math.max(this.gridSize.width, this.gridSize.height);
+    for (let radius = 1; radius <= maxRadius; radius++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue;
+          const x = centerX + dx;
+          const y = centerY + dy;
+          if (this.isWalkable(x, y)) return { x, y }
+        }
+      }
     }
+
+    return { x: centerX, y: centerY }
   }
 }
 
-export const rooms = new Map<string, Room>([["forest-1", new Room("forest-1", "Forest Server")]]);
+const terrain = loadTerrain();
+export const rooms = new Map<string, Room>([
+  [
+    "forest-1",
+    new Room("forest-1", "Forest Server", { width: terrain.width, height: terrain.height }, terrain.walkable)
+  ]
+]);

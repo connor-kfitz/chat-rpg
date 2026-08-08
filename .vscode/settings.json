@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "tile_maps/**/*.tsx": "xml",
+    "tile_maps/**/*.tmj": "json"
+  }
+}

@@ -13,10 +13,11 @@ As a player, I want to move my character around the grid using the keyboard so I
 - [x] Attempting to move off the grid edge is rejected; the sprite still updates its facing direction.
 
 ## Out of Scope
-- Terrain collision (every tile is walkable in MVP) — see [`roadmap.md`](../../roadmap.md) for terrain variety.
+- Terrain collision — every tile was walkable when this shipped; superseded by [005 — World Terrain](../005-world-terrain/spec.md), which adds real terrain and collision rules.
 - Player-vs-player collision — stacking is allowed by design, not a bug.
 
 ## Related
 - Architecture: [Movement Validation Rules](../../architecture/overview.md#movement-validation-rules), [WebSocket Protocol](../../architecture/overview.md#websocket-protocol) (`move`, `player_moved`)
 - ADRs: [0004 — Event-Driven Update Model](../../architecture/decisions/0004-event-driven-update-model.md), [0005 — Server-Authoritative Movement](../../architecture/decisions/0005-server-authoritative-movement.md)
+- Extended by: [005 — World Terrain](../005-world-terrain/spec.md) (adds terrain collision to the move-validation path)
 - Flow: Server Join ([002](../002-server-join/spec.md)) → Game View → **Movement** + [Multiplayer Presence](../004-multiplayer-presence/spec.md)

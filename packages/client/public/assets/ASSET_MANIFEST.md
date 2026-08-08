@@ -4,13 +4,15 @@ These are hand-coded (not AI-image-generated) 8-bit-style pixel art, built from 
 geometric bands + an auto-outline pass. They're fully usable to build and playtest the
 MVP end-to-end — swap them for licensed/commissioned art later without touching game code.
 
+Terrain no longer uses a placeholder — it renders from a licensed Tiled tilemap synced
+from `tile_maps/` at dev/build time. See [ADR-0010](../../../../specs/architecture/decisions/0010-licensed-tileset-terrain.md).
+
 ## Files
 
 | File | Size | Purpose |
 |---|---|---|
 | `mage_spritesheet.png` | 96×128 (3 cols × 4 rows, 32×32/frame) | Game-ready Mage animations |
 | `knight_spritesheet.png` | 96×128 (3 cols × 4 rows, 32×32/frame) | Game-ready Knight animations |
-| `forest_tile.png` | 32×32 | Game-ready ground tile (repeat across the grid) |
 | `mage_portrait.png` / `knight_portrait.png` | 128×128 | Character-select screen art |
 | `*_preview.png` | 384×512 (128px/frame) | Larger versions of the spritesheets, for reviewing detail only — not for the game |
 
@@ -62,7 +64,6 @@ Same pattern for `knight_spritesheet.png`.
 
 - **Mage**: indigo robe, gold trim, warm skin tone
 - **Knight**: steel-gray armor, red plume/trim, warm skin tone
-- **Forest tile**: two-tone dithered green with a few light "tuft" accents
 - Both characters share a near-black outline (`#121218`) auto-generated around the silhouette
 
 ## Known limitations of this v0 pass

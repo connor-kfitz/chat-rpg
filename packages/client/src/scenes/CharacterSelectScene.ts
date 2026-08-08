@@ -2,6 +2,8 @@ import Phaser from "phaser";
 
 import type { CharacterClass } from "@fantasy-grid/shared";
 import { sessionStore } from "../state/sessionStore";
+import { DESIGN_WIDTH } from "../config/constants";
+import { createCenteredLayer } from "../ui/centeredLayer";
 
 interface CharacterOption {
   characterClass: CharacterClass;
@@ -45,39 +47,52 @@ export class CharacterSelectScene extends Phaser.Scene {
   create(): void {
     this.selectedClass = null;
 
-    this.add
-      .text(this.scale.width / 2, 40, "Choose Your Character", { fontFamily: "monospace", fontSize: "20px" })
-      .setOrigin(0.5, 0.5);
+    const layer = createCenteredLayer(this);
+    const centerX = DESIGN_WIDTH / 2;
+
+    layer.add(
+      this.add
+        .text(centerX, 40, "Choose Your Character", { fontFamily: "monospace", fontSize: "20px" })
+        .setOrigin(0.5, 0.5)
+    );
 
     this.highlight = this.add.graphics();
+    layer.add(this.highlight);
 
     for (const option of OPTIONS) {
       const portrait = this.add.image(option.x, PORTRAIT_Y, option.portraitKey);
       portrait.setInteractive({ useHandCursor: true });
       portrait.on("pointerdown", () => this.selectCharacter(option.characterClass));
       this.portraitsByClass.set(option.characterClass, portrait);
+      layer.add(portrait);
 
-      this.add
-        .text(option.x, PORTRAIT_Y + 90, option.displayName, { fontFamily: "monospace", fontSize: "16px" })
-        .setOrigin(0.5, 0.5);
+      layer.add(
+        this.add
+          .text(option.x, PORTRAIT_Y + 90, option.displayName, { fontFamily: "monospace", fontSize: "16px" })
+          .setOrigin(0.5, 0.5)
+      );
 
-      this.add
-        .text(option.x, PORTRAIT_Y + 115, option.flavorText, {
-          fontFamily: "monospace",
-          fontSize: "11px",
-          color: "#cccccc",
-          align: "center",
-          wordWrap: { width: 200 }
-        })
-        .setOrigin(0.5, 0.5);
+      layer.add(
+        this.add
+          .text(option.x, PORTRAIT_Y + 115, option.flavorText, {
+            fontFamily: "monospace",
+            fontSize: "11px",
+            color: "#cccccc",
+            align: "center",
+            wordWrap: { width: 200 }
+          })
+          .setOrigin(0.5, 0.5)
+      );
     }
 
-    this.add
-      .text(this.scale.width / 2, 330, "Display name:", { fontFamily: "monospace", fontSize: "14px" })
-      .setOrigin(0.5, 0.5);
+    layer.add(
+      this.add
+        .text(centerX, 330, "Display name:", { fontFamily: "monospace", fontSize: "14px" })
+        .setOrigin(0.5, 0.5)
+    );
 
     this.nameInput = this.add.dom(
-      this.scale.width / 2,
+      centerX,
       360,
       "input",
       "width: 200px; height: 24px; font-size: 14px; font-family: monospace; text-align: center;"
@@ -85,9 +100,10 @@ export class CharacterSelectScene extends Phaser.Scene {
     (this.nameInput.node as HTMLInputElement).maxLength = 20;
     this.nameInput.addListener("input");
     this.nameInput.on("input", () => this.refreshConfirmState());
+    layer.add(this.nameInput);
 
     this.confirmButton = this.add
-      .text(this.scale.width / 2, 420, "Confirm", {
+      .text(centerX, 420, "Confirm", {
         fontFamily: "monospace",
         fontSize: "18px",
         backgroundColor: "#333333",
@@ -95,6 +111,7 @@ export class CharacterSelectScene extends Phaser.Scene {
       })
       .setOrigin(0.5, 0.5);
     this.confirmButton.on("pointerdown", () => this.confirm());
+    layer.add(this.confirmButton);
 
     this.refreshConfirmState();
   }
@@ -102,14 +119,15 @@ export class CharacterSelectScene extends Phaser.Scene {
   private selectCharacter(characterClass: CharacterClass): void {
     this.selectedClass = characterClass;
     const portrait = this.portraitsByClass.get(characterClass)!;
-    const bounds = portrait.getBounds();
+    const left = portrait.x - portrait.displayOriginX;
+    const top = portrait.y - portrait.displayOriginY;
     this.highlight.clear();
     this.highlight.lineStyle(3, 0xffdd55, 1);
     this.highlight.strokeRect(
-      bounds.x - HIGHLIGHT_PADDING,
-      bounds.y - HIGHLIGHT_PADDING,
-      bounds.width + HIGHLIGHT_PADDING * 2,
-      bounds.height + HIGHLIGHT_PADDING * 2
+      left - HIGHLIGHT_PADDING,
+      top - HIGHLIGHT_PADDING,
+      portrait.displayWidth + HIGHLIGHT_PADDING * 2,
+      portrait.displayHeight + HIGHLIGHT_PADDING * 2
     );
     this.refreshConfirmState();
   }

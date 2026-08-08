@@ -10,9 +10,6 @@ Not part of MVP by design — see [product/overview.md](product/overview.md#expl
 ## More Characters/Classes
 - `CharacterClass` is already a typed field ([architecture/overview.md](architecture/overview.md#data-model)) — extending the union and layering in stats/abilities is additive, not structural.
 
-## Terrain Variety
-- `tileType` is currently a single constant. Swapping to a 2D array of tile types (water, mountains, etc.) is a contained change to `GameState` and the client's tilemap renderer.
-
 ## Multiple Servers
 - The `Map<serverId, Room>` registry already supports this (see [ADR-0008](architecture/decisions/0008-multi-room-registry.md)) — the server list screen just needs to render more than one entry.
 

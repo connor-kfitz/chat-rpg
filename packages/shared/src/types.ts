@@ -19,7 +19,6 @@ export interface RoomSnapshot {
   id: string;
   name: string;
   gridSize: { width: number; height: number };
-  tileType: "forest";
   players: Player[];
   maxPlayers: number;
 }

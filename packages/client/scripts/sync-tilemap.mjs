@@ -6,7 +6,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, readd
 import { basename, dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const CLIENT_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
+const ROOT = dirname(dirname(CLIENT_DIR));
 const MAP_PATH = join(ROOT, "tile_maps", "capybara-forest.tmj");
 const TILESETS_DIR = join(ROOT, "tile_maps", "capybara-forest");
 const BLOB_PREFIX = "tile_maps/";

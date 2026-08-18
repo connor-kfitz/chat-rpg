@@ -4,14 +4,15 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "predev": "node ../../scripts/sync-tilemap.mjs",
+    "predev": "node ./scripts/sync-tilemap.mjs",
     "dev": "vite",
-    "prebuild": "node ../../scripts/sync-tilemap.mjs",
+    "prebuild": "node ./scripts/sync-tilemap.mjs",
     "build": "vite build",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@fantasy-grid/shared": "^0.1.0",
+    "@vercel/blob": "^2.8.0",
     "phaser": "^4.2.1"
   },
   "devDependencies": {

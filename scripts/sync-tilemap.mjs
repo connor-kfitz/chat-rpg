@@ -9,6 +9,47 @@ import { fileURLToPath } from "node:url";
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const MAP_PATH = join(ROOT, "tile_maps", "capybara-forest.tmj");
 const TILESETS_DIR = join(ROOT, "tile_maps", "capybara-forest");
+const BLOB_PREFIX = "tile_maps/";
+
+for (const envFile of [join(ROOT, ".env"), join(ROOT, ".env.local")]) {
+  if (existsSync(envFile)) process.loadEnvFile(envFile);
+}
+
+/**
+ * The licensed tileset images can't live in git (ADR-0010), so CI/deploy environments have
+ * nothing under tile_maps/capybara-forest/ unless we fetch it from somewhere at build time. We
+ * mirror that folder into Vercel Blob out-of-band and pull it down here before falling back to
+ * whatever's already on disk (the normal path for local dev, where the licensed files are kept
+ * manually).
+ */
+async function syncFromBlob() {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.log("sync-tilemap: BLOB_READ_WRITE_TOKEN not set — using tile_maps/ as-is on disk.");
+    return;
+  }
+
+  const { list } = await import("@vercel/blob");
+  let cursor;
+  let count = 0;
+  do {
+    const page = await list({ prefix: BLOB_PREFIX, cursor, token: process.env.BLOB_READ_WRITE_TOKEN });
+    for (const blob of page.blobs) {
+      const destPath = join(ROOT, blob.pathname);
+      mkdirSync(dirname(destPath), { recursive: true });
+      const res = await fetch(blob.url, {
+        headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
+      });
+      if (!res.ok) {
+        throw new Error(`sync-tilemap: failed to download ${blob.pathname} from Blob (${res.status})`);
+      }
+      writeFileSync(destPath, Buffer.from(await res.arrayBuffer()));
+      count++;
+    }
+    cursor = page.cursor;
+  } while (cursor);
+
+  console.log(`sync-tilemap: pulled ${count} file(s) from Vercel Blob -> tile_maps/`);
+}
 const OUT_DIR = join(ROOT, "packages", "client", "public", "assets", "tilemaps");
 const OUT_MAP_PATH = join(OUT_DIR, "world.tmj");
 const OUT_TILESETS_DIR = join(OUT_DIR, "capybara-forest");
@@ -86,7 +127,9 @@ function resolveTsxPath(entry, tsxIndex) {
   return null;
 }
 
-function main() {
+async function main() {
+  await syncFromBlob();
+
   if (!existsSync(MAP_PATH)) {
     throw new Error(`Map not found at ${MAP_PATH} — the licensed tile_maps/ content must be present locally (see ADR-0010). Nothing to sync.`);
   }
@@ -152,4 +195,8 @@ function main() {
   console.log(`sync-tilemap: wrote manifest -> ${relative(ROOT, MANIFEST_PATH)}`);
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+

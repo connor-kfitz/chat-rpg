@@ -16,6 +16,7 @@
     "start": "npm run start --workspace=@fantasy-grid/server"
   },
   "devDependencies": {
+    "@vercel/blob": "^2.8.0",
     "concurrently": "^10.0.4",
     "typescript": "^7.0.2"
   }

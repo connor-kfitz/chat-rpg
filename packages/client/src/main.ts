@@ -10,6 +10,7 @@ import { GameScene } from "./scenes/GameScene";
 new Phaser.Game({
   type: Phaser.WEBGL,
   parent: "game-root",
+  backgroundColor: "#ffffff",
   pixelArt: true,
   dom: { createContainer: true },
   scale: {

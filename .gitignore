@@ -10,3 +10,9 @@ tile_maps/capybara-forest/**
 !tile_maps/capybara-forest/**/
 !tile_maps/capybara-forest/**/.gitkeep
 packages/client/public/assets/tilemaps/
+
+character_art/**
+!character_art/.gitkeep
+!character_art/README.md
+packages/client/public/assets/sprites/*.png
+packages/client/public/assets/portraits/*.png

@@ -1,4 +1,4 @@
-export type CharacterClass = "mage" | "knight";
+export type CharacterClass = "knight" | "templar";
 export type Direction = "up" | "down" | "left" | "right";
 
 export interface Position {

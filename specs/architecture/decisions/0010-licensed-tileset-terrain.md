@@ -12,6 +12,7 @@ A licensed tileset (organized locally under `tile_maps/capybara-forest/`, author
 - Terrain assets (the `.tsx` tileset files and their source images, plus the `.tmj` map) live in `tile_maps/` at the repo root and are **git-ignored** (`tile_maps/capybara-forest/*`) — only `.gitkeep` placeholders and the folder structure are tracked. `tile_maps/capybara-forest.tmj` itself (the map document, no embedded image data) is tracked.
 - `tile_maps/` is the single source of truth for terrain assets. The client build/dev process syncs (copies) the needed files into `packages/client/public/assets/tilemaps/` at dev-server start / build time; that synced copy is also git-ignored, so nothing licensed ever reaches version control.
 - Character art (`mage_spritesheet.png`, `knight_spritesheet.png`, portraits) is **not** replaced by this change — it remains the placeholder art described in `ASSET_MANIFEST.md` until a licensed or commissioned replacement is sourced. See [roadmap.md](../../roadmap.md).
+  - **Update (2026-08-17):** superseded — character art (Knight/Templar) is now paid/licensed too, and follows this same out-of-repo pattern via `character_art/` at the repo root, synced by `packages/client/scripts/sync-character-art.mjs`. See `character_art/README.md`.
 - `forest_tile.png` becomes obsolete once terrain renders from the real tilemap and should be removed from `packages/client/public/assets/sprites/` and `ASSET_MANIFEST.md` when [features/005 — World Terrain](../../features/005-world-terrain/spec.md) is implemented.
 
 ## Consequences

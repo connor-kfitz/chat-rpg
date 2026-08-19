@@ -15,17 +15,17 @@ interface CharacterOption {
 
 const OPTIONS: CharacterOption[] = [
   {
-    characterClass: "mage",
-    displayName: "Mage",
-    flavorText: "Wields arcane power from the forest's edge.",
-    portraitKey: "mage_portrait",
-    x: 200
-  },
-  {
     characterClass: "knight",
     displayName: "Knight",
     flavorText: "Stands ready with steel and shield.",
     portraitKey: "knight_portrait",
+    x: 200
+  },
+  {
+    characterClass: "templar",
+    displayName: "Templar",
+    flavorText: "A holy warrior sworn to defend the realm.",
+    portraitKey: "templar_portrait",
     x: 440
   }
 ];

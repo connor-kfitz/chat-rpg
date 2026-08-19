@@ -5,6 +5,7 @@ import { registerAnimalAnimations } from "../anims/registerAnimalAnimations";
 import { loadPersistedSession, sessionStore } from "../state/sessionStore";
 import { TILESET_MANIFEST } from "../generated/tilesetManifest";
 import { ANIMAL_SPRITES } from "../config/animalAnims";
+import { CHARACTER_FRAME_SIZE } from "../config/constants";
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -37,16 +38,16 @@ export class PreloadScene extends Phaser.Scene {
         frameHeight: animal.frameHeight
       });
     }
-    this.load.spritesheet("mage", "/assets/sprites/mage_spritesheet.png", {
-      frameWidth: 32,
-      frameHeight: 32
-    });
     this.load.spritesheet("knight", "/assets/sprites/knight_spritesheet.png", {
-      frameWidth: 32,
-      frameHeight: 32
+      frameWidth: CHARACTER_FRAME_SIZE,
+      frameHeight: CHARACTER_FRAME_SIZE
     });
-    this.load.image("mage_portrait", "/assets/portraits/mage_portrait.png");
+    this.load.spritesheet("templar", "/assets/sprites/templar_spritesheet.png", {
+      frameWidth: CHARACTER_FRAME_SIZE,
+      frameHeight: CHARACTER_FRAME_SIZE
+    });
     this.load.image("knight_portrait", "/assets/portraits/knight_portrait.png");
+    this.load.image("templar_portrait", "/assets/portraits/templar_portrait.png");
   }
 
   create(): void {

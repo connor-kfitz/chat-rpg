@@ -1,0 +1,9 @@
+# MVP Todo
+
+Working punch list of near-term tasks. Lighter weight than [`roadmap.md`](roadmap.md) — no promotion process, just check items off as they're done. Bigger items should still get a proper spec under [`features/`](features/) if they need one.
+
+- [ ] Add ability to chat
+- [ ] Update fav icon
+- [ ] Add basic mobile support
+- [ ] Improve movement response
+- [ ] Add slow server start-up loading cycles and messaging

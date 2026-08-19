@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 
 import type { Direction, Player, Position } from "@fantasy-grid/shared";
-import { MOVE_TWEEN_MS, TILE_SIZE } from "../config/constants";
+import { CHARACTER_DISPLAY_SCALE, MOVE_TWEEN_MS, TILE_SIZE } from "../config/constants";
 import { idleFrame, walkAnimKey } from "../anims/registerCharacterAnimations";
 
 function toPixelCenter(position: Position): { x: number; y: number } {
@@ -25,6 +25,8 @@ export class PlayerEntity {
 
     const { x, y } = toPixelCenter(player.position);
     this.sprite = scene.add.sprite(0, 0, player.characterClass, idleFrame(player.characterClass, player.facing));
+    this.sprite.setScale(CHARACTER_DISPLAY_SCALE);
+    this.sprite.setFlipX(player.facing === "left");
 
     const label = scene.add
       .text(0, -24, player.displayName, {
@@ -44,6 +46,7 @@ export class PlayerEntity {
 
   moveTo(direction: Direction, position: Position): void {
     this.scene.tweens.killTweensOf(this.container);
+    this.sprite.setFlipX(direction === "left");
     this.sprite.play(walkAnimKey(this.characterClass, direction));
 
     const { x, y } = toPixelCenter(position);
@@ -63,6 +66,7 @@ export class PlayerEntity {
 
   setFacing(direction: Direction): void {
     if (this.scene.tweens.isTweening(this.container)) return;
+    this.sprite.setFlipX(direction === "left");
     this.sprite.setFrame(idleFrame(this.characterClass, direction));
   }
 

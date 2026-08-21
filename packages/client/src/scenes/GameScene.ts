@@ -1,12 +1,13 @@
 import Phaser from "phaser";
 
-import type { Direction, PlayerJoinedMessage, PlayerLeftMessage, PlayerMovedMessage } from "@fantasy-grid/shared";
+import type { ChatMessage, Direction, PlayerJoinedMessage, PlayerLeftMessage, PlayerMovedMessage } from "@fantasy-grid/shared";
 import { socketClient } from "../net/SocketClient";
 import { sessionStore } from "../state/sessionStore";
 import { MOVE_COOLDOWN_MS, TILE_SIZE } from "../config/constants";
 import { PlayerEntity } from "../entities/PlayerEntity";
 import { TILESET_MANIFEST } from "../generated/tilesetManifest";
 import { ANIMAL_SPRITES } from "../config/animalAnims";
+import { ChatPanel } from "../ui/ChatPanel";
 
 const MAP_LAYER_NAMES = ["Terrain", "Terrain Shadows", "Objects", "Objects Two"];
 const ABOVE_PLAYER_LAYER_NAME = "Above Player";
@@ -29,6 +30,7 @@ export class GameScene extends Phaser.Scene {
   private registeredKeys: Phaser.Input.Keyboard.Key[] = [];
   private heldDirections: Direction[] = [];
   private lastMoveSentAt = 0;
+  private chatPanel?: ChatPanel;
 
   constructor() {
     super("GameScene");
@@ -83,10 +85,12 @@ export class GameScene extends Phaser.Scene {
     this.scale.on(Phaser.Scale.Events.RESIZE, this.updateCameraViewport, this);
 
     this.registerMovementKeys();
+    this.chatPanel = new ChatPanel(this);
 
     socketClient.on("player_joined", this.onPlayerJoined, this);
     socketClient.on("player_moved", this.onPlayerMoved, this);
     socketClient.on("player_left", this.onPlayerLeft, this);
+    socketClient.on("chat", this.onChat, this);
     socketClient.on("disconnected", this.onDisconnected, this);
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanup, this);
@@ -201,6 +205,10 @@ export class GameScene extends Phaser.Scene {
     this.entities.delete(msg.playerId);
   }
 
+  private onChat(msg: ChatMessage): void {
+    this.chatPanel?.addMessage(msg.displayName, msg.text);
+  }
+
   private onDisconnected(): void {
     if (this.disconnectOverlay) return;
     this.inputEnabled = false;
@@ -226,9 +234,12 @@ export class GameScene extends Phaser.Scene {
     }
     this.registeredKeys = [];
     this.heldDirections = [];
+    this.chatPanel?.destroy();
+    this.chatPanel = undefined;
     socketClient.off("player_joined", this.onPlayerJoined, this);
     socketClient.off("player_moved", this.onPlayerMoved, this);
     socketClient.off("player_left", this.onPlayerLeft, this);
+    socketClient.off("chat", this.onChat, this);
     socketClient.off("disconnected", this.onDisconnected, this);
     for (const entity of this.entities.values()) entity.destroy();
     this.entities.clear();

@@ -1,6 +1,6 @@
-import { MOVE_COOLDOWN_MS, type Direction } from "@fantasy-grid/shared";
+import { CHAT_MAX_LENGTH, MOVE_COOLDOWN_MS, type Direction } from "@fantasy-grid/shared";
 
-export { MOVE_COOLDOWN_MS };
+export { MOVE_COOLDOWN_MS, CHAT_MAX_LENGTH };
 
 export const TILE_SIZE = 32;
 export const DESIGN_WIDTH = 640;

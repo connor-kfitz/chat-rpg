@@ -6,6 +6,7 @@ import { readFile } from "node:fs/promises";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ClientMessage, ServerMessage } from "@fantasy-grid/shared";
+import { CHAT_MAX_LENGTH } from "@fantasy-grid/shared";
 import { rooms } from "./rooms.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
@@ -143,6 +144,27 @@ wss.on("connection", (ws) => {
           playerId: updated.id,
           position: updated.position,
           facing: updated.facing
+        });
+        break;
+      }
+
+      case "chat": {
+        const state = connections.get(ws);
+        if (!state) return;
+        const room = rooms.get(state.roomId);
+        if (!room) return;
+        const player = room.getPlayer(state.playerId);
+        if (!player) return;
+
+        const text = msg.text.trim().slice(0, CHAT_MAX_LENGTH);
+        if (!text) return;
+
+        broadcast(room.id, {
+          type: "chat",
+          playerId: player.id,
+          displayName: player.displayName,
+          text,
+          sentAt: Date.now()
         });
         break;
       }

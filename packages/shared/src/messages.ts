@@ -23,7 +23,17 @@ export interface ListRoomsMessage {
   type: "list_rooms";
 }
 
-export type ClientMessage = JoinRoomMessage | MoveMessage | LeaveRoomMessage | ListRoomsMessage;
+export interface SendChatMessage {
+  type: "chat";
+  text: string;
+}
+
+export type ClientMessage =
+  | JoinRoomMessage
+  | MoveMessage
+  | LeaveRoomMessage
+  | ListRoomsMessage
+  | SendChatMessage;
 
 // ---- Server -> Client ----
 
@@ -70,10 +80,19 @@ export interface RoomListMessage {
   rooms: RoomListEntry[];
 }
 
+export interface ChatMessage {
+  type: "chat";
+  playerId: string;
+  displayName: string;
+  text: string;
+  sentAt: number;
+}
+
 export type ServerMessage =
   | JoinAckMessage
   | PlayerJoinedMessage
   | PlayerMovedMessage
   | PlayerLeftMessage
   | ErrorMessage
-  | RoomListMessage;
+  | RoomListMessage
+  | ChatMessage;

@@ -9,6 +9,8 @@ import { createCenteredLayer } from "../ui/centeredLayer";
 const POLL_INTERVAL_MS = 4000;
 const ROW_START_Y = 140;
 const ROW_HEIGHT = 60;
+const SLOW_CONNECT_MS = 5000;
+const VERY_SLOW_CONNECT_MS = 20000;
 
 interface Row {
   container: Phaser.GameObjects.Container;
@@ -21,6 +23,8 @@ export class ServerListScene extends Phaser.Scene {
   private errorText!: Phaser.GameObjects.Text;
   private rows: Row[] = [];
   private pollTimer?: Phaser.Time.TimerEvent;
+  private slowConnectTimer?: Phaser.Time.TimerEvent;
+  private verySlowConnectTimer?: Phaser.Time.TimerEvent;
   private joining = false;
   private resuming = false;
 
@@ -61,6 +65,15 @@ export class ServerListScene extends Phaser.Scene {
 
     socketClient.connect(WS_URL);
 
+    this.slowConnectTimer = this.time.delayedCall(SLOW_CONNECT_MS, () => {
+      this.statusText.setText(
+        "Still connecting — the server may be waking up from sleep, this can take up to a minute…"
+      );
+    });
+    this.verySlowConnectTimer = this.time.delayedCall(VERY_SLOW_CONNECT_MS, () => {
+      this.statusText.setText("This is taking longer than usual — hang tight, cold starts can take up to a minute.");
+    });
+
     this.pollTimer = this.time.addEvent({
       delay: POLL_INTERVAL_MS,
       loop: true,
@@ -71,6 +84,8 @@ export class ServerListScene extends Phaser.Scene {
   }
 
   private onConnected(): void {
+    this.slowConnectTimer?.destroy();
+    this.verySlowConnectTimer?.destroy();
     this.statusText.setText("Connected");
     socketClient.send({ type: "list_rooms" });
 
@@ -88,6 +103,8 @@ export class ServerListScene extends Phaser.Scene {
   }
 
   private onDisconnected(): void {
+    this.slowConnectTimer?.destroy();
+    this.verySlowConnectTimer?.destroy();
     this.statusText.setText("Disconnected — refresh to retry");
   }
 
@@ -174,5 +191,7 @@ export class ServerListScene extends Phaser.Scene {
     socketClient.off("error", this.onError, this);
     socketClient.off("disconnected", this.onDisconnected, this);
     this.pollTimer?.destroy();
+    this.slowConnectTimer?.destroy();
+    this.verySlowConnectTimer?.destroy();
   }
 }

@@ -6,4 +6,4 @@ Working punch list of near-term tasks. Lighter weight than [`roadmap.md`](roadma
 - [ ] Update fav icon
 - [ ] Add basic mobile support
 - [ ] Improve movement response
-- [ ] Add slow server start-up loading cycles and messaging
+- [x] Add slow server start-up loading cycles and messaging

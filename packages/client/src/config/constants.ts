@@ -1,4 +1,6 @@
-import type { Direction } from "@fantasy-grid/shared";
+import { MOVE_COOLDOWN_MS, type Direction } from "@fantasy-grid/shared";
+
+export { MOVE_COOLDOWN_MS };
 
 export const TILE_SIZE = 32;
 export const DESIGN_WIDTH = 640;

@@ -1,7 +1,6 @@
-import type { CharacterClass, Direction, Player, RoomSnapshot } from "@fantasy-grid/shared";
+import { MOVE_COOLDOWN_MS, type CharacterClass, type Direction, type Player, type RoomSnapshot } from "@fantasy-grid/shared";
 import { loadTerrain } from "./terrain.js";
 
-const MOVE_COOLDOWN_MS = 150;
 const GRACE_PERIOD_MS = 60_000;
 
 const DELTA: Record<Direction, { dx: number; dy: number }> = {

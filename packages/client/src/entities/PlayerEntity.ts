@@ -65,8 +65,8 @@ export class PlayerEntity {
   }
 
   setFacing(direction: Direction): void {
-    if (this.scene.tweens.isTweening(this.container)) return;
     this.sprite.setFlipX(direction === "left");
+    if (this.scene.tweens.isTweening(this.container)) return;
     this.sprite.setFrame(idleFrame(this.characterClass, direction));
   }
 

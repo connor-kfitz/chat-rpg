@@ -3,7 +3,7 @@ import Phaser from "phaser";
 import type { Direction, PlayerJoinedMessage, PlayerLeftMessage, PlayerMovedMessage } from "@fantasy-grid/shared";
 import { socketClient } from "../net/SocketClient";
 import { sessionStore } from "../state/sessionStore";
-import { TILE_SIZE } from "../config/constants";
+import { MOVE_COOLDOWN_MS, TILE_SIZE } from "../config/constants";
 import { PlayerEntity } from "../entities/PlayerEntity";
 import { TILESET_MANIFEST } from "../generated/tilesetManifest";
 import { ANIMAL_SPRITES } from "../config/animalAnims";
@@ -12,15 +12,12 @@ const MAP_LAYER_NAMES = ["Terrain", "Terrain Shadows", "Objects", "Objects Two"]
 const ABOVE_PLAYER_LAYER_NAME = "Above Player";
 const ANIMALS_LAYER_NAME = "Animals";
 
-const KEY_TO_DIRECTION: Record<string, Direction> = {
-  "keydown-UP": "up",
-  "keydown-DOWN": "down",
-  "keydown-LEFT": "left",
-  "keydown-RIGHT": "right",
-  "keydown-W": "up",
-  "keydown-S": "down",
-  "keydown-A": "left",
-  "keydown-D": "right"
+const KeyCodes = Phaser.Input.Keyboard.KeyCodes;
+const DIRECTION_KEY_CODES: Record<Direction, number[]> = {
+  up: [KeyCodes.UP, KeyCodes.W],
+  down: [KeyCodes.DOWN, KeyCodes.S],
+  left: [KeyCodes.LEFT, KeyCodes.A],
+  right: [KeyCodes.RIGHT, KeyCodes.D]
 }
 
 export class GameScene extends Phaser.Scene {
@@ -29,6 +26,9 @@ export class GameScene extends Phaser.Scene {
   private inputEnabled = true;
   private gridPixelWidth = 0;
   private gridPixelHeight = 0;
+  private registeredKeys: Phaser.Input.Keyboard.Key[] = [];
+  private heldDirections: Direction[] = [];
+  private lastMoveSentAt = 0;
 
   constructor() {
     super("GameScene");
@@ -43,6 +43,9 @@ export class GameScene extends Phaser.Scene {
 
     this.entities.clear();
     this.inputEnabled = true;
+    this.registeredKeys = [];
+    this.heldDirections = [];
+    this.lastMoveSentAt = 0;
 
     const { width, height } = room.gridSize;
     const map = this.make.tilemap({ key: "world" });
@@ -79,9 +82,7 @@ export class GameScene extends Phaser.Scene {
     this.updateCameraViewport();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.updateCameraViewport, this);
 
-    for (const eventName of Object.keys(KEY_TO_DIRECTION)) {
-      this.input.keyboard?.on(eventName, () => this.handleKey(KEY_TO_DIRECTION[eventName]));
-    }
+    this.registerMovementKeys();
 
     socketClient.on("player_joined", this.onPlayerJoined, this);
     socketClient.on("player_moved", this.onPlayerMoved, this);
@@ -146,8 +147,35 @@ export class GameScene extends Phaser.Scene {
     camera.setViewport(offsetX, offsetY, viewportWidth, viewportHeight);
   }
 
-  private handleKey(direction: Direction): void {
+  private registerMovementKeys(): void {
+    const keyboard = this.input.keyboard;
+    if (!keyboard) return;
+
+    for (const [direction, codes] of Object.entries(DIRECTION_KEY_CODES) as [Direction, number[]][]) {
+      for (const code of codes) {
+        const key = keyboard.addKey(code);
+        key.on("down", () => {
+          this.heldDirections = [direction, ...this.heldDirections.filter((d) => d !== direction)];
+          this.sendMove(direction, this.time.now);
+        });
+        key.on("up", () => {
+          this.heldDirections = this.heldDirections.filter((d) => d !== direction);
+        });
+        this.registeredKeys.push(key);
+      }
+    }
+  }
+
+  update(time: number): void {
+    if (!this.inputEnabled || this.heldDirections.length === 0) return;
+    if (time - this.lastMoveSentAt < MOVE_COOLDOWN_MS) return;
+
+    this.sendMove(this.heldDirections[0], time);
+  }
+
+  private sendMove(direction: Direction, time: number): void {
     if (!this.inputEnabled) return;
+    this.lastMoveSentAt = time;
 
     const localEntity = sessionStore.playerId ? this.entities.get(sessionStore.playerId) : undefined;
     // Optimistic, position-independent facing update: the server silently drops
@@ -193,9 +221,11 @@ export class GameScene extends Phaser.Scene {
 
   private cleanup(): void {
     this.scale.off(Phaser.Scale.Events.RESIZE, this.updateCameraViewport, this);
-    for (const eventName of Object.keys(KEY_TO_DIRECTION)) {
-      this.input.keyboard?.off(eventName);
+    for (const key of this.registeredKeys) {
+      key.destroy();
     }
+    this.registeredKeys = [];
+    this.heldDirections = [];
     socketClient.off("player_joined", this.onPlayerJoined, this);
     socketClient.off("player_moved", this.onPlayerMoved, this);
     socketClient.off("player_left", this.onPlayerLeft, this);

@@ -13,3 +13,16 @@ html, body {
 #game-root canvas {
   display: block;
 }
+
+.unsupported-device {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+  text-align: center;
+  font-family: monospace;
+  font-size: 16px;
+  color: #ffffff;
+}

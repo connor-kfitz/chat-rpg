@@ -126,11 +126,10 @@ export class ChatPanel {
 
   private layout(): void {
     const camera = this.scene.cameras.main;
-    const pageOffsetX = (window.innerWidth - this.scene.scale.width) / 2;
 
     const visibleWidth = Math.min(camera.width, window.innerWidth);
     const panelWidth = visibleWidth < MOBILE_BREAKPOINT ? Math.max(visibleWidth - MARGIN * 2, 0) : LOG_WIDTH;
-    const x = MARGIN - pageOffsetX - camera.x;
+    const x = MARGIN;
     const y = camera.height - LOG_HEIGHT - INPUT_HEIGHT - MARGIN * 2;
 
     this.background.width = panelWidth;
